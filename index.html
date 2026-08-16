@@ -80,6 +80,49 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+  /* ===== Product detail page ===== */
+  .breadcrumb{max-width:1200px;margin:0 auto;padding:18px 24px 0;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;}
+  .breadcrumb a{color:var(--blue);text-decoration:none;cursor:pointer;}
+  .breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb span.sep{color:var(--line);}
+  .breadcrumb span.current{color:var(--ink);font-weight:600;}
+
+  .detail-wrap{max-width:1200px;margin:0 auto;padding:20px 24px 10px;display:grid;grid-template-columns:1fr 1fr;gap:36px;}
+  .detail-media{
+    aspect-ratio:1/1;border-radius:20px;overflow:hidden;position:relative;
+    background:linear-gradient(150deg, var(--blue-deep), var(--blue));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-size:96px;color:rgba(255,255,255,0.92);
+  }
+  .detail-media img{width:100%;height:100%;object-fit:cover;}
+  .detail-media .offer-tag{font-size:12px;padding:6px 14px;top:16px;left:16px;}
+  .detail-info{display:flex;flex-direction:column;padding-top:4px;}
+  .detail-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.5px;color:var(--blue);text-transform:uppercase;margin-bottom:10px;}
+  .detail-info h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(24px,3vw,32px);margin:0 0 14px;line-height:1.25;}
+  .detail-info .desc{font-size:14.5px;color:var(--muted);line-height:1.85;margin:0 0 22px;}
+  .detail-price-row{display:flex;align-items:baseline;gap:12px;margin-bottom:24px;}
+  .detail-price{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:28px;color:var(--blue-deep);}
+  .detail-price-old{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--muted);text-decoration:line-through;}
+  .detail-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .detail-order-btn{
+    background:var(--blue);color:#fff;border:none;padding:14px 26px;border-radius:11px;font-family:'Inter',sans-serif;
+    font-weight:600;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;
+  }
+  .detail-order-btn:hover{background:var(--blue-deep);}
+  .detail-order-btn svg{width:17px;height:17px;}
+  .detail-link-btn{
+    background:#fff;color:var(--blue-deep);border:1px solid var(--line);padding:14px 20px;border-radius:11px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  }
+  .detail-link-btn:hover{background:var(--blue-pale);}
+  .detail-link-btn svg{width:15px;height:15px;}
+  .related-head{max-width:1200px;margin:0 auto;padding:44px 24px 4px;}
+  .related-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0;}
+  @media (max-width:760px){
+    .detail-wrap{grid-template-columns:1fr;gap:20px;}
+    .detail-media{font-size:64px;}
+  }
+
   .section-head{max-width:1200px;margin:0 auto;padding:32px 24px 4px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
   .section-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
   .section-head span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
@@ -158,7 +201,7 @@
   </div>
 </header>
 
-<section class="hero">
+<section class="hero" id="heroSection">
   <div class="hero-inner">
     <p class="hero-eyebrow">التجميل والعناية</p>
     <h2>منتجاتنا الأصلية، بأسعار واضحة، وتوصيل لباب البيت</h2>
@@ -171,13 +214,18 @@
   </div>
 </section>
 
-<nav class="chips-wrap"><div class="chips" id="chipRow"></div></nav>
+<nav class="chips-wrap" id="chipsWrap"><div class="chips" id="chipRow"></div></nav>
 
-<div class="section-head"><h3>المنتجات</h3><span id="resultCount"></span></div>
+<div class="section-head" id="sectionHead"><h3>المنتجات</h3><span id="resultCount"></span></div>
 
 <main class="grid" id="grid">
   <div class="empty-state"><span>بنجهز الكتالوج…</span></div>
 </main>
+
+<div class="breadcrumb" id="breadcrumb" style="display:none;"></div>
+<div class="detail-wrap" id="detailWrap" style="display:none;"></div>
+<div class="related-head" id="relatedHead" style="display:none;"><h3>منتجات مشابهة</h3></div>
+<main class="grid" id="relatedGrid"></main>
 
 <footer class="site">
   <div class="footer-inner">
@@ -245,7 +293,7 @@ function fallbackCopy(text){
 
 function baseUrl(){ return location.origin + location.pathname; }
 function categoryLink(cat){ return cat === "الكل" ? baseUrl() : baseUrl() + "?cat=" + encodeURIComponent(cat); }
-function productLink(name){ return baseUrl() + "?q=" + encodeURIComponent(name); }
+function productLink(id){ return baseUrl() + "?product=" + encodeURIComponent(id); }
 
 function renderChips(){
   chipRow.innerHTML = "";
@@ -276,6 +324,58 @@ function waLink(productName){
   return "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + msg;
 }
 
+function goToProduct(id){ location.href = productLink(id); }
+
+function buildCard(p){
+  const card = document.createElement("div");
+  card.className = "card";
+  const imgHtml = p.imageUrl
+    ? `<img src="${p.imageUrl}" alt="${p.name}">`
+    : (p.name ? p.name.charAt(0) : "؟");
+  card.innerHTML = `
+    <div class="swatch">
+      ${p.oldPrice ? '<span class="offer-tag">عرض خاص</span>' : ''}
+      ${imgHtml}
+    </div>
+    <div class="card-body">
+      <div class="eyebrow">${p.category||""}</div>
+      <div class="title-row">
+        <h4>${p.name||""}</h4>
+        <button class="card-link" title="نسخ رابط المنتج ده" data-id="${p.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>
+        </button>
+      </div>
+      <p>${p.desc||""}</p>
+    </div>
+    <div class="label-perf"></div>
+    <div class="price-row">
+      <div class="price-block">
+        <span class="price">${p.price} ج.م</span>
+        ${p.oldPrice ? `<span class="price-old">${p.oldPrice}</span>` : ''}
+      </div>
+      <button class="order-btn" data-waname="${(p.name||"").replace(/"/g,'&quot;')}">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.7-1.2-4.5-3.9-4.6-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.6-.1 1.1Z"/></svg>
+        اطلب
+      </button>
+    </div>
+  `;
+  // فتح صفحة المنتج لما تدوس على الكارت، إلا لو دوست على زرار "اطلب" أو أيقونة الرابط
+  card.addEventListener("click", (e)=>{
+    if(e.target.closest(".order-btn") || e.target.closest(".card-link")) return;
+    goToProduct(p.id);
+  });
+  card.style.cursor = "pointer";
+  card.querySelector(".order-btn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    window.open(waLink(p.name), "_blank");
+  });
+  card.querySelector(".card-link").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    copyText(productLink(p.id));
+  });
+  return card;
+}
+
 function renderGrid(){
   const filtered = products.filter(p=>{
     const matchesCat = activeCategory === "الكل" ? true
@@ -293,45 +393,112 @@ function renderGrid(){
     return;
   }
 
-  filtered.forEach(p=>{
-    const card = document.createElement("div");
-    card.className = "card";
-    const imgHtml = p.imageUrl
-      ? `<img src="${p.imageUrl}" alt="${p.name}">`
-      : (p.name ? p.name.charAt(0) : "؟");
-    card.innerHTML = `
-      <div class="swatch">
-        ${p.oldPrice ? '<span class="offer-tag">عرض خاص</span>' : ''}
-        ${imgHtml}
+  filtered.forEach(p=> grid.appendChild(buildCard(p)));
+}
+
+// ===== صفحة تفاصيل المنتج =====
+const breadcrumb = document.getElementById("breadcrumb");
+const detailWrap = document.getElementById("detailWrap");
+const relatedHead = document.getElementById("relatedHead");
+const relatedGrid = document.getElementById("relatedGrid");
+const heroSection = document.getElementById("heroSection");
+const chipsWrap = document.getElementById("chipsWrap");
+const sectionHead = document.getElementById("sectionHead");
+
+function renderProductDetail(id){
+  const p = products.find(x=>x.id===id);
+
+  // إخفاء عناصر الصفحة الرئيسية
+  heroSection.style.display = "none";
+  chipsWrap.style.display = "none";
+  sectionHead.style.display = "none";
+  grid.style.display = "none";
+
+  if(!p){
+    breadcrumb.style.display = "flex";
+    breadcrumb.innerHTML = `<a href="${baseUrl()}">الرئيسية</a><span class="sep">/</span><span class="current">منتج غير موجود</span>`;
+    detailWrap.style.display = "block";
+    detailWrap.style.gridTemplateColumns = "1fr";
+    detailWrap.innerHTML = '<div class="empty-state"><span>المنتج ده مش موجود أو اتشال</span>ممكن يكون الرابط قديم — ارجع للكتالوج وشوف المنتجات المتاحة</div>';
+    relatedHead.style.display = "none";
+    return;
+  }
+
+  document.title = p.name + " | صيدلية الحازم";
+
+  breadcrumb.style.display = "flex";
+  breadcrumb.innerHTML = `
+    <a href="${baseUrl()}">الرئيسية</a><span class="sep">/</span>
+    <a href="${categoryLink(p.category)}">${p.category||""}</a><span class="sep">/</span>
+    <span class="current">${p.name||""}</span>
+  `;
+
+  detailWrap.style.display = "grid";
+  detailWrap.style.gridTemplateColumns = "";
+  const imgHtml = p.imageUrl
+    ? `<img src="${p.imageUrl}" alt="${p.name}">`
+    : (p.name ? p.name.charAt(0) : "؟");
+  detailWrap.innerHTML = `
+    <div class="detail-media">
+      ${p.oldPrice ? '<span class="offer-tag">عرض خاص</span>' : ''}
+      ${imgHtml}
+    </div>
+    <div class="detail-info">
+      <div class="detail-eyebrow">${p.category||""}</div>
+      <h1>${p.name||""}</h1>
+      <p class="desc">${p.desc || "مفيش وصف تفصيلي لسه لهذا المنتج."}</p>
+      <div class="detail-price-row">
+        <span class="detail-price">${p.price} ج.م</span>
+        ${p.oldPrice ? `<span class="detail-price-old">${p.oldPrice} ج.م</span>` : ''}
       </div>
-      <div class="card-body">
-        <div class="eyebrow">${p.category||""}</div>
-        <div class="title-row">
-          <h4>${p.name||""}</h4>
-          <button class="card-link" title="نسخ رابط المنتج ده" data-name="${(p.name||"").replace(/"/g,'&quot;')}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>
-          </button>
-        </div>
-        <p>${p.desc||""}</p>
-      </div>
-      <div class="label-perf"></div>
-      <div class="price-row">
-        <div class="price-block">
-          <span class="price">${p.price} ج.م</span>
-          ${p.oldPrice ? `<span class="price-old">${p.oldPrice}</span>` : ''}
-        </div>
-        <button class="order-btn" onclick="window.open('${waLink(p.name)}','_blank')">
+      <div class="detail-actions">
+        <button class="detail-order-btn" id="detailOrderBtn">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.7-1.2-4.5-3.9-4.6-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.6-.1 1.1Z"/></svg>
-          اطلب
+          اطلب المنتج ده
+        </button>
+        <button class="detail-link-btn" id="detailLinkBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>
+          نسخ رابط المنتج
         </button>
       </div>
-    `;
-    grid.appendChild(card);
-  });
+    </div>
+  `;
+  document.getElementById("detailOrderBtn").addEventListener("click", ()=> window.open(waLink(p.name), "_blank"));
+  document.getElementById("detailLinkBtn").addEventListener("click", ()=> copyText(productLink(p.id)));
 
-  grid.querySelectorAll(".card-link").forEach(btn=>{
-    btn.addEventListener("click", ()=> copyText(productLink(btn.dataset.name)));
-  });
+  // منتجات مشابهة (نفس التصنيف)
+  const related = products.filter(x=> x.id!==p.id && x.category===p.category).slice(0,4);
+  if(related.length){
+    relatedHead.style.display = "block";
+    relatedGrid.innerHTML = "";
+    related.forEach(r=> relatedGrid.appendChild(buildCard(r)));
+  } else {
+    relatedHead.style.display = "none";
+    relatedGrid.innerHTML = "";
+  }
+}
+
+function showHomepage(){
+  heroSection.style.display = "";
+  chipsWrap.style.display = "";
+  sectionHead.style.display = "";
+  grid.style.display = "";
+  breadcrumb.style.display = "none";
+  detailWrap.style.display = "none";
+  relatedHead.style.display = "none";
+  relatedGrid.innerHTML = "";
+  document.title = "كتالوج صيدلية الحازم | التجميل والعناية";
+}
+
+function route(){
+  const params = new URLSearchParams(location.search);
+  const productId = params.get("product");
+  if(productId){
+    renderProductDetail(productId);
+  } else {
+    showHomepage();
+    renderGrid();
+  }
 }
 
 db.ref("products").on("value", (snapshot) => {
@@ -339,18 +506,16 @@ db.ref("products").on("value", (snapshot) => {
   snapshot.forEach(child => {
     products.push({ id: child.key, ...child.val() });
   });
-  renderGrid();
+  route();
 });
 
 searchInput.addEventListener("input", (e)=>{ searchTerm = e.target.value.trim(); activeCategory="الكل"; renderChips(); renderGrid(); });
 
-// لو حد دخل من رابط فيه قسم أو اسم منتج محدد (زي لينك اتبعت على واتساب)
+// لو حد دخل من رابط فيه قسم محدد (زي لينك اتبعت على واتساب)
 (function applyUrlParams(){
   const params = new URLSearchParams(location.search);
   const cat = params.get("cat");
-  const q = params.get("q");
   if(cat && chipCategories.includes(cat)) activeCategory = cat;
-  if(q){ searchTerm = q; searchInput.value = q; }
 })();
 
 document.getElementById("fabOrder").addEventListener("click", ()=>{
@@ -359,7 +524,6 @@ document.getElementById("fabOrder").addEventListener("click", ()=>{
 });
 
 renderChips();
-renderGrid();
 </script>
 
 </body>
