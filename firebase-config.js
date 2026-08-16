@@ -12,8 +12,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
-// ملحوظة: تخزين الصور (Storage) مش مفعّل دلوقتي لأنه محتاج ترقية الخطة في Firebase.
-// المنتجات هتظهر بمربع لون وحرف بدل الصورة لحد ما تفعّلوا الموضوع ده.
+
+// بيانات رفع الصور على Cloudinary (مجاني، من غير بطاقة)
+const CLOUDINARY_CLOUD_NAME = "teewpyyl";
+const CLOUDINARY_UPLOAD_PRESET = "hazem_products";
 
 // نفس قائمة التصنيفات لازم تتطابق بين لوحة التحكم والموقع
 const CATEGORIES = ["العناية بالبشرة", "مكياج", "العناية بالشعر", "عطور"];

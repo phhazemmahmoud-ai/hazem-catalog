@@ -205,6 +205,11 @@
       <div class="field"><label>التصنيف</label><select id="fCategory"></select></div>
       <div class="field"><label>السعر (ج.م)</label><input id="fPrice" type="number" min="0"></div>
       <div class="field full"><label>سعر قبل الخصم (اختياري — لعمل عرض)</label><input id="fOldPrice" type="number" min="0"></div>
+      <div class="field full">
+        <label>صورة المنتج (اختياري)</label>
+        <input id="fImage" type="file" accept="image/*">
+        <div class="img-preview" id="imgPreview">هتظهر الصورة هنا</div>
+      </div>
     </div>
     <div class="form-msg" id="formMsg"></div>
     <div class="modal-actions">
@@ -327,9 +332,13 @@ const fPrice = document.getElementById("fPrice");
 const fOldPrice = document.getElementById("fOldPrice");
 const formMsg = document.getElementById("formMsg");
 const saveBtn = document.getElementById("saveBtn");
+const fImage = document.getElementById("fImage");
+const imgPreview = document.getElementById("imgPreview");
+let currentImageUrl = "";
 
 function openModal(id){
   formMsg.textContent = "";
+  fImage.value = "";
   if(id){
     const p = products.find(x=>x.id===id);
     modalTitle.textContent = "تعديل المنتج";
@@ -339,11 +348,15 @@ function openModal(id){
     fCategory.value = p.category||CATEGORIES[0];
     fPrice.value = p.price||"";
     fOldPrice.value = p.oldPrice||"";
+    currentImageUrl = p.imageUrl||"";
+    imgPreview.innerHTML = currentImageUrl ? `<img src="${currentImageUrl}">` : "هتظهر الصورة هنا";
   } else {
     modalTitle.textContent = "إضافة منتج جديد";
     editId.value = "";
     fName.value = ""; fDesc.value = ""; fPrice.value = ""; fOldPrice.value = "";
     fCategory.value = CATEGORIES[0];
+    currentImageUrl = "";
+    imgPreview.innerHTML = "هتظهر الصورة هنا";
   }
   modalOverlay.classList.add("open");
 }
@@ -353,6 +366,25 @@ function closeModal(){ modalOverlay.classList.remove("open"); }
 document.getElementById("addBtn").addEventListener("click", ()=> openModal(null));
 document.getElementById("cancelBtn").addEventListener("click", closeModal);
 modalOverlay.addEventListener("click", e=>{ if(e.target===modalOverlay) closeModal(); });
+
+fImage.addEventListener("change", ()=>{
+  const file = fImage.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=> imgPreview.innerHTML = `<img src="${e.target.result}">`;
+  reader.readAsDataURL(file);
+});
+
+async function uploadToCloudinary(file){
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(url, { method: "POST", body: formData });
+  if(!res.ok) throw new Error("فشل رفع الصورة");
+  const data = await res.json();
+  return data.secure_url;
+}
 
 saveBtn.addEventListener("click", async ()=>{
   const name = fName.value.trim();
@@ -372,6 +404,14 @@ saveBtn.addEventListener("click", async ()=>{
   saveBtn.textContent = "جاري الحفظ…";
 
   try{
+    let imageUrl = currentImageUrl;
+    const file = fImage.files[0];
+    if(file){
+      saveBtn.textContent = "جاري رفع الصورة…";
+      imageUrl = await uploadToCloudinary(file);
+      saveBtn.textContent = "جاري الحفظ…";
+    }
+
     const data = {
       name,
       desc: fDesc.value.trim(),
@@ -380,6 +420,7 @@ saveBtn.addEventListener("click", async ()=>{
       updatedAt: Date.now()
     };
     if(oldPriceVal) data.oldPrice = oldPriceVal; else data.oldPrice = null;
+    if(imageUrl) data.imageUrl = imageUrl;
 
     const id = editId.value;
     if(id){
