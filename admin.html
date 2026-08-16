@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم صيدلية الحازم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2233; --paper:#FFFFFF; --surface:#F4F8FC;
+    --blue:#0B5FA8; --blue-deep:#0A3D63; --blue-pale:#E5F0FA; --blue-line:#D2E3F1;
+    --gold:#C79A3F; --red:#C0433E; --muted:#5D7285; --line:#E3EAF1; --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--surface);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+
+  /* ===== Login screen ===== */
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:linear-gradient(155deg, var(--blue-deep) 0%, var(--blue) 100%);
+  }
+  .login-card{
+    background:#fff;border-radius:18px;padding:36px 32px;width:100%;max-width:380px;
+    box-shadow:0 24px 60px rgba(10,20,30,0.3);
+  }
+  .login-mark{width:52px;height:52px;border-radius:12px;background:var(--blue-deep);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .login-mark svg{width:26px;height:26px;}
+  .login-card h1{font-family:'Fraunces',serif;font-size:21px;text-align:center;margin:0 0 4px;color:var(--blue-deep);}
+  .login-card p.sub{text-align:center;color:var(--muted);font-size:12.5px;margin:0 0 26px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink);}
+  .field input{width:100%;padding:11px 14px;border-radius:9px;border:1px solid var(--line);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+  .field input:focus-visible{border-color:var(--blue);}
+  .btn-primary{width:100%;padding:12px;border:none;border-radius:9px;background:var(--blue);color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .15s;margin-top:6px;}
+  .btn-primary:hover{background:var(--blue-deep);}
+  .login-error{color:var(--red);font-size:12.5px;text-align:center;margin-top:12px;min-height:16px;}
+
+  /* ===== App shell ===== */
+  #appScreen{display:none;min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:220px;flex-shrink:0;background:var(--blue-deep);color:#fff;display:flex;flex-direction:column;padding:22px 16px;
+  }
+  .side-brand{display:flex;align-items:center;gap:10px;margin-bottom:30px;padding:0 4px;}
+  .side-brand .mark{width:36px;height:36px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .side-brand .mark svg{width:18px;height:18px;}
+  .side-brand h2{font-family:'Fraunces',serif;font-size:15px;margin:0;font-weight:600;}
+  .side-brand p{margin:0;font-size:10px;color:rgba(255,255,255,0.6);font-family:'IBM Plex Mono',monospace;}
+  .side-nav{display:flex;flex-direction:column;gap:3px;}
+  .side-nav button{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:transparent;
+    color:rgba(255,255,255,0.75);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;text-align:right;
+    transition:background .15s,color .15s;
+  }
+  .side-nav button svg{width:16px;height:16px;flex-shrink:0;}
+  .side-nav button:hover{background:rgba(255,255,255,0.08);color:#fff;}
+  .side-nav button.active{background:rgba(255,255,255,0.14);color:#fff;}
+  .side-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,0.14);}
+  .side-footer .user-email{font-size:11px;color:rgba(255,255,255,0.6);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;word-break:break-all;}
+  .logout-btn{width:100%;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:transparent;color:#fff;font-size:12.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .logout-btn:hover{background:rgba(255,255,255,0.1);}
+  .back-link{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.6);font-size:12px;text-decoration:none;margin-bottom:18px;}
+  .back-link svg{width:13px;height:13px;}
+
+  .main{flex:1;padding:26px 30px;max-width:1100px;}
+  .main h1.page-title{font-family:'Fraunces',serif;font-size:23px;margin:0 0 4px;}
+  .main p.page-sub{color:var(--muted);font-size:13px;margin:0 0 22px;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:26px;}
+  .stat-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+  .stat-card .num{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;color:var(--blue-deep);}
+  .stat-card .label{font-size:12px;color:var(--muted);margin-top:4px;}
+
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .btn-add{background:var(--blue);color:#fff;border:none;padding:10px 18px;border-radius:9px;font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:7px;}
+  .btn-add:hover{background:var(--blue-deep);}
+  .btn-add svg{width:15px;height:15px;}
+
+  .table-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:right;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;font-family:'IBM Plex Mono',monospace;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface);}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  .prod-cell{display:flex;align-items:center;gap:10px;}
+  .prod-thumb{width:40px;height:40px;border-radius:8px;background:linear-gradient(150deg, var(--blue-deep), var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Fraunces',serif;font-size:15px;flex-shrink:0;overflow:hidden;}
+  .prod-thumb img{width:100%;height:100%;object-fit:cover;}
+  .prod-name{font-weight:600;}
+  .prod-desc{font-size:11.5px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tag-cat{background:var(--blue-pale);color:var(--blue-deep);font-size:11px;padding:3px 9px;border-radius:999px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+  .price-cell{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .price-old-cell{font-family:'IBM Plex Mono',monospace;color:var(--muted);text-decoration:line-through;font-size:11.5px;margin-inline-start:6px;}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+  .icon-btn svg{width:14px;height:14px;}
+  .icon-btn.edit{color:var(--blue);}
+  .icon-btn.edit:hover{background:var(--blue-pale);}
+  .icon-btn.delete{color:var(--red);}
+  .icon-btn.delete:hover{background:#FBEAE9;}
+  .empty-row td{text-align:center;padding:50px 16px;color:var(--muted);}
+
+  /* ===== Modal ===== */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(10,20,30,0.5);z-index:60;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;padding:26px 26px 22px;}
+  .modal h3{font-family:'Fraunces',serif;font-size:18px;margin:0 0 18px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-grid .full{grid-column:1/-1;}
+  .field textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);font-family:'Inter',sans-serif;font-size:13.5px;resize:vertical;min-height:60px;outline:none;}
+  .field select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);font-family:'Inter',sans-serif;font-size:13.5px;background:#fff;outline:none;}
+  .field input[type=file]{font-size:12px;}
+  .img-preview{width:100%;height:110px;border-radius:9px;background:var(--surface);border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-top:8px;color:var(--muted);font-size:12px;}
+  .img-preview img{width:100%;height:100%;object-fit:cover;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .btn-cancel{flex:1;padding:11px;border-radius:9px;border:1px solid var(--line);background:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+  .btn-save{flex:1;padding:11px;border-radius:9px;border:none;background:var(--blue);color:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+  .btn-save:hover{background:var(--blue-deep);}
+  .btn-save:disabled{opacity:0.6;cursor:not-allowed;}
+  .form-msg{font-size:12px;color:var(--red);min-height:16px;margin-top:8px;}
+
+  @media (max-width:760px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;align-items:center;padding:12px 16px;}
+    .side-nav{flex-direction:row;}
+    .side-footer{display:none;}
+    .main{padding:20px 16px;}
+    .form-grid{grid-template-columns:1fr;}
+    table{font-size:12px;}
+    .prod-desc{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Login ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-mark"><svg viewBox="0 0 24 24" fill="none"><rect x="10" y="4" width="4" height="16" rx="1.5" fill="#fff"/><rect x="4" y="10" width="16" height="4" rx="1.5" fill="#fff"/></svg></div>
+    <h1>لوحة تحكم صيدلية الحازم</h1>
+    <p class="sub">سجّل الدخول بحساب الموظف</p>
+    <div class="field"><label>البريد الإلكتروني</label><input id="loginEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label>كلمة المرور</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+    <button class="btn-primary" id="loginBtn">دخول</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<div id="appScreen">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none"><rect x="10" y="4" width="4" height="16" rx="1.5" fill="#0A3D63"/><rect x="4" y="10" width="16" height="4" rx="1.5" fill="#0A3D63"/></svg></div>
+        <div><h2>صيدلية الحازم</h2><p>لوحة التحكم</p></div>
+      </div>
+      <nav class="side-nav">
+        <button class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> المنتجات</button>
+      </nav>
+      <div class="side-footer">
+        <div class="user-email" id="userEmail"></div>
+        <a class="back-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> رجوع للموقع</a>
+        <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <h1 class="page-title">المنتجات</h1>
+      <p class="page-sub">إدارة كاملة لمنتجات الكتالوج — أي تعديل بيظهر فورًا على الموقع.</p>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">إجمالي المنتجات</div></div>
+        <div class="stat-card"><div class="num" id="statOffers">0</div><div class="label">عروض نشطة</div></div>
+        <div class="stat-card"><div class="num" id="statCats">4</div><div class="label">تصنيفات</div></div>
+      </div>
+
+      <div class="toolbar">
+        <span></span>
+        <button class="btn-add" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> إضافة منتج</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المنتج</th><th>التصنيف</th><th>السعر</th><th></th></tr></thead>
+          <tbody id="productsBody">
+            <tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">إضافة منتج جديد</h3>
+    <input type="hidden" id="editId">
+    <div class="form-grid">
+      <div class="field full"><label>اسم المنتج</label><input id="fName" type="text"></div>
+      <div class="field full"><label>الوصف</label><textarea id="fDesc"></textarea></div>
+      <div class="field"><label>التصنيف</label><select id="fCategory"></select></div>
+      <div class="field"><label>السعر (ج.م)</label><input id="fPrice" type="number" min="0"></div>
+      <div class="field full"><label>سعر قبل الخصم (اختياري — لعمل عرض)</label><input id="fOldPrice" type="number" min="0"></div>
+    </div>
+    <div class="form-msg" id="formMsg"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">إلغاء</button>
+      <button class="btn-save" id="saveBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const loginScreen = document.getElementById("loginScreen");
+const appScreen = document.getElementById("appScreen");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
+const userEmailEl = document.getElementById("userEmail");
+
+loginBtn.addEventListener("click", ()=>{
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  loginError.textContent = "";
+  if(!email || !password){ loginError.textContent = "اكتب البريد وكلمة المرور"; return; }
+  auth.signInWithEmailAndPassword(email, password).catch(err=>{
+    loginError.textContent = "بيانات الدخول غير صحيحة";
+  });
+});
+
+document.getElementById("logoutBtn").addEventListener("click", ()=> auth.signOut());
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginScreen.style.display = "none";
+    appScreen.style.display = "block";
+    userEmailEl.textContent = user.email;
+    startProductsListener();
+  } else {
+    loginScreen.style.display = "flex";
+    appScreen.style.display = "none";
+  }
+});
+
+// ===== Category select options =====
+const fCategory = document.getElementById("fCategory");
+CATEGORIES.forEach(c=>{
+  const opt = document.createElement("option");
+  opt.value = c; opt.textContent = c;
+  fCategory.appendChild(opt);
+});
+document.getElementById("statCats").textContent = CATEGORIES.length;
+
+// ===== Products realtime listener =====
+let products = [];
+let listenerStarted = false;
+function startProductsListener(){
+  if(listenerStarted) return;
+  listenerStarted = true;
+  db.ref("products").on("value", snapshot=>{
+    products = [];
+    snapshot.forEach(child=> products.push({ id: child.key, ...child.val() }));
+    renderTable();
+  });
+}
+
+function renderTable(){
+  const body = document.getElementById("productsBody");
+  document.getElementById("statTotal").textContent = products.length;
+  document.getElementById("statOffers").textContent = products.filter(p=>p.oldPrice).length;
+
+  if(products.length === 0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">مفيش منتجات لسه — دوس "إضافة منتج" عشان تبدأ</td></tr>';
+    return;
+  }
+
+  body.innerHTML = "";
+  products.forEach(p=>{
+    const tr = document.createElement("tr");
+    const thumb = p.imageUrl ? `<img src="${p.imageUrl}">` : (p.name?p.name.charAt(0):"؟");
+    tr.innerHTML = `
+      <td>
+        <div class="prod-cell">
+          <div class="prod-thumb">${thumb}</div>
+          <div><div class="prod-name">${p.name||""}</div><div class="prod-desc">${p.desc||""}</div></div>
+        </div>
+      </td>
+      <td><span class="tag-cat">${p.category||""}</span></td>
+      <td class="price-cell">${p.price} ج.م ${p.oldPrice?`<span class="price-old-cell">${p.oldPrice}</span>`:""}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn edit" data-id="${p.id}" title="تعديل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg></button>
+          <button class="icon-btn delete" data-id="${p.id}" title="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+        </div>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll(".icon-btn.edit").forEach(btn=>{
+    btn.addEventListener("click", ()=> openModal(btn.dataset.id));
+  });
+  body.querySelectorAll(".icon-btn.delete").forEach(btn=>{
+    btn.addEventListener("click", ()=> deleteProduct(btn.dataset.id));
+  });
+}
+
+function deleteProduct(id){
+  if(!confirm("متأكد إنك عايز تحذف المنتج ده؟")) return;
+  db.ref("products/" + id).remove();
+}
+
+// ===== Modal logic =====
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const editId = document.getElementById("editId");
+const fName = document.getElementById("fName");
+const fDesc = document.getElementById("fDesc");
+const fPrice = document.getElementById("fPrice");
+const fOldPrice = document.getElementById("fOldPrice");
+const formMsg = document.getElementById("formMsg");
+const saveBtn = document.getElementById("saveBtn");
+
+function openModal(id){
+  formMsg.textContent = "";
+  if(id){
+    const p = products.find(x=>x.id===id);
+    modalTitle.textContent = "تعديل المنتج";
+    editId.value = id;
+    fName.value = p.name||"";
+    fDesc.value = p.desc||"";
+    fCategory.value = p.category||CATEGORIES[0];
+    fPrice.value = p.price||"";
+    fOldPrice.value = p.oldPrice||"";
+  } else {
+    modalTitle.textContent = "إضافة منتج جديد";
+    editId.value = "";
+    fName.value = ""; fDesc.value = ""; fPrice.value = ""; fOldPrice.value = "";
+    fCategory.value = CATEGORIES[0];
+  }
+  modalOverlay.classList.add("open");
+}
+
+function closeModal(){ modalOverlay.classList.remove("open"); }
+
+document.getElementById("addBtn").addEventListener("click", ()=> openModal(null));
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", e=>{ if(e.target===modalOverlay) closeModal(); });
+
+saveBtn.addEventListener("click", async ()=>{
+  const name = fName.value.trim();
+  const price = parseFloat(fPrice.value);
+  formMsg.textContent = "";
+
+  if(!name){ formMsg.textContent = "اكتب اسم المنتج"; return; }
+  if(isNaN(price) || price < 0){ formMsg.textContent = "اكتب سعر صحيح"; return; }
+
+  const oldPriceVal = fOldPrice.value ? parseFloat(fOldPrice.value) : null;
+  if(oldPriceVal !== null && oldPriceVal <= price){
+    formMsg.textContent = "سعر ما قبل الخصم لازم يكون أكبر من السعر الحالي";
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "جاري الحفظ…";
+
+  try{
+    const data = {
+      name,
+      desc: fDesc.value.trim(),
+      category: fCategory.value,
+      price,
+      updatedAt: Date.now()
+    };
+    if(oldPriceVal) data.oldPrice = oldPriceVal; else data.oldPrice = null;
+
+    const id = editId.value;
+    if(id){
+      await db.ref("products/" + id).update(data);
+    } else {
+      data.createdAt = Date.now();
+      await db.ref("products").push(data);
+    }
+    closeModal();
+  } catch(err){
+    formMsg.textContent = "حصل خطأ أثناء الحفظ: " + err.message;
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "حفظ";
+  }
+});
+</script>
+
+</body>
+</html>
