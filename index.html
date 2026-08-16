@@ -4,13 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>كتالوج صيدلية الحازم | التجميل والعناية</title>
+<link rel="icon" href="favicon-32.png">
+<link rel="apple-touch-icon" href="favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0F2233; --paper:#FFFFFF; --surface:#F4F8FC; --card:#FFFFFF;
-    --blue:#0B5FA8; --blue-deep:#0A3D63; --blue-pale:#E5F0FA; --blue-line:#D2E3F1;
-    --gold:#C79A3F; --muted:#5D7285; --line:#E3EAF1; --radius:16px;
+    --blue:#205AAE; --blue-deep:#123159; --blue-pale:#E7EEF9; --blue-line:#D3DFF0;
+    --gold:#B80F2C; --muted:#5D7285; --line:#E3EAF1; --radius:16px;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -24,8 +26,8 @@
   header.site{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;}
   .header-inner{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px;}
   .brand-row{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-  .brand-mark{width:40px;height:40px;border-radius:9px;background:var(--blue-deep);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .brand-mark svg{width:20px;height:20px;}
+  .brand-mark{width:44px;height:44px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+  .brand-mark img{width:100%;height:100%;object-fit:contain;}
   .brand-text h1{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0;color:var(--blue-deep);letter-spacing:0.1px;}
   .brand-text p{margin:0;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
   .header-search{flex:1;position:relative;max-width:440px;margin-inline-start:auto;}
@@ -131,7 +133,7 @@
 <header class="site">
   <div class="header-inner">
     <div class="brand-row">
-      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><rect x="10" y="4" width="4" height="16" rx="1.5" fill="#fff"/><rect x="4" y="10" width="16" height="4" rx="1.5" fill="#fff"/></svg></div>
+      <div class="brand-mark"><img src="logo-icon.png" alt="لوجو صيدلية الحازم"></div>
       <div class="brand-text"><h1>صيدلية الحازم</h1><p>كتالوج التجميل والعناية</p></div>
     </div>
     <div class="header-search">
