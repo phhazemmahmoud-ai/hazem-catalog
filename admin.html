@@ -526,10 +526,57 @@ fImage.addEventListener("change", ()=>{
   reader.readAsDataURL(file);
 });
 
-async function uploadToCloudinary(file){
+// ===== حط لوجو الصيدلية تلقائيًا على أي صورة منتج قبل الرفع =====
+const watermarkLogoPromise = new Promise((resolve)=>{
+  const img = new Image();
+  img.onload = ()=> resolve(img);
+  img.onerror = ()=> resolve(null); // لو حصل أي مشكلة، نرفع الصورة عادي من غير لوجو
+  img.src = "logo-icon.png";
+});
+
+function loadImageFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{ resolve(img); URL.revokeObjectURL(url); };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function addWatermark(file){
+  const logoImg = await watermarkLogoPromise;
+  const sourceImg = await loadImageFromFile(file);
+
+  const maxDim = 1400;
+  let width = sourceImg.width, height = sourceImg.height;
+  if(width > maxDim || height > maxDim){
+    const scale = maxDim / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(sourceImg, 0, 0, width, height);
+
+  if(logoImg){
+    const logoW = width * 0.17;
+    const logoH = logoW * (logoImg.height / logoImg.width);
+    const pad = width * 0.025;
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(logoImg, width - logoW - pad, height - logoH - pad, logoW, logoH);
+    ctx.globalAlpha = 1;
+  }
+
+  return new Promise(resolve=> canvas.toBlob(resolve, "image/jpeg", 0.92));
+}
+
+async function uploadToCloudinary(fileOrBlob){
   const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", fileOrBlob, "product.jpg");
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
   const res = await fetch(url, { method: "POST", body: formData });
   if(!res.ok) throw new Error("فشل رفع الصورة");
@@ -558,8 +605,16 @@ saveBtn.addEventListener("click", async ()=>{
     let imageUrl = currentImageUrl;
     const file = fImage.files[0];
     if(file){
+      let uploadTarget = file;
+      try{
+        saveBtn.textContent = "جاري إضافة اللوجو للصورة…";
+        const watermarked = await addWatermark(file);
+        if(watermarked) uploadTarget = watermarked;
+      }catch(e){
+        // لو فشلت إضافة اللوجو لأي سبب، نرفع الصورة الأصلية عادي
+      }
       saveBtn.textContent = "جاري رفع الصورة…";
-      imageUrl = await uploadToCloudinary(file);
+      imageUrl = await uploadToCloudinary(uploadTarget);
       saveBtn.textContent = "جاري الحفظ…";
     }
 
