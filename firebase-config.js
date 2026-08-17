@@ -18,4 +18,4 @@ const CLOUDINARY_CLOUD_NAME = "teewpyyl";
 const CLOUDINARY_UPLOAD_PRESET = "hazem_products";
 
 // ملحوظة: الأقسام بقت متخزنة في قاعدة البيانات نفسها (تتعدل من لوحة التحكم مباشرة)
-const WHATSAPP_NUMBER = "20xxxxxxxxxx"; // غيّروا الرقم ده برقم واتساب الصيدلية
+const WHATSAPP_NUMBER = "201206285037";
