@@ -531,7 +531,7 @@ const watermarkLogoPromise = new Promise((resolve)=>{
   const img = new Image();
   img.onload = ()=> resolve(img);
   img.onerror = ()=> resolve(null); // لو حصل أي مشكلة، نرفع الصورة عادي من غير لوجو
-  img.src = "logo-icon.png";
+  img.src = "logo-full.png";
 });
 
 function loadImageFromFile(file){
@@ -562,12 +562,30 @@ async function addWatermark(file){
   ctx.drawImage(sourceImg, 0, 0, width, height);
 
   if(logoImg){
-    const logoW = width * 0.17;
-    const logoH = logoW * (logoImg.height / logoImg.width);
-    const pad = width * 0.025;
-    ctx.globalAlpha = 0.85;
-    ctx.drawImage(logoImg, width - logoW - pad, height - logoH - pad, logoW, logoH);
-    ctx.globalAlpha = 1;
+    // مربع صغير بنفس لون خلفية الموقع، واللوجو الكامل جواه بوضوح كامل
+    const pad = width * 0.03;
+    const badgeW = width * 0.26;
+    const badgeH = badgeW * (logoImg.height / logoImg.width);
+    const badgeX = width - badgeW - pad;
+    const badgeY = height - badgeH - pad;
+    const radius = badgeW * 0.05;
+
+    ctx.fillStyle = "#F4F8FC"; // نفس لون خلفية الموقع (var(--surface))
+    ctx.beginPath();
+    ctx.moveTo(badgeX + radius, badgeY);
+    ctx.arcTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + badgeH, radius);
+    ctx.arcTo(badgeX + badgeW, badgeY + badgeH, badgeX, badgeY + badgeH, radius);
+    ctx.arcTo(badgeX, badgeY + badgeH, badgeX, badgeY, radius);
+    ctx.arcTo(badgeX, badgeY, badgeX + badgeW, badgeY, radius);
+    ctx.closePath();
+    ctx.fill();
+
+    const innerPad = badgeW * 0.09;
+    const logoDrawW = badgeW - innerPad * 2;
+    const logoDrawH = logoDrawW * (logoImg.height / logoImg.width);
+    const logoX = badgeX + innerPad;
+    const logoY = badgeY + (badgeH - logoDrawH) / 2;
+    ctx.drawImage(logoImg, logoX, logoY, logoDrawW, logoDrawH);
   }
 
   return new Promise(resolve=> canvas.toBlob(resolve, "image/jpeg", 0.92));
