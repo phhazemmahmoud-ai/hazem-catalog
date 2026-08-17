@@ -421,7 +421,7 @@ function startProductsListener(){
   listenerStarted = true;
   db.ref("products").on("value", snapshot=>{
     products = [];
-    snapshot.forEach(child=> products.push({ id: child.key, ...child.val() }));
+    snapshot.forEach(child=>{ products.push({ id: child.key, ...child.val() }); });
     renderTable();
   });
 }
