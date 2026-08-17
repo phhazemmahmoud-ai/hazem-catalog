@@ -17,6 +17,5 @@ const auth = firebase.auth();
 const CLOUDINARY_CLOUD_NAME = "teewpyyl";
 const CLOUDINARY_UPLOAD_PRESET = "hazem_products";
 
-// نفس قائمة التصنيفات لازم تتطابق بين لوحة التحكم والموقع
-const CATEGORIES = ["العناية بالبشرة", "مكياج", "العناية بالشعر", "عطور"];
+// ملحوظة: الأقسام بقت متخزنة في قاعدة البيانات نفسها (تتعدل من لوحة التحكم مباشرة)
 const WHATSAPP_NUMBER = "20xxxxxxxxxx"; // غيّروا الرقم ده برقم واتساب الصيدلية

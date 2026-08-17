@@ -3,6 +3,10 @@
     "products": {
       ".read": true,
       ".write": "auth != null"
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null"
     }
   }
 }

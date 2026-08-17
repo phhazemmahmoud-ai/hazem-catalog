@@ -100,6 +100,12 @@
   .icon-btn.delete:hover{background:#FBEAE9;}
   .empty-row td{text-align:center;padding:50px 16px;color:var(--muted);}
 
+  .add-cat-row{display:flex;gap:10px;width:100%;}
+  .add-cat-row input{flex:1;padding:10px 14px;border-radius:9px;border:1px solid var(--line);font-family:'Inter',sans-serif;font-size:13.5px;outline:none;}
+  .add-cat-row input:focus-visible{border-color:var(--blue);}
+  .cat-name{font-weight:600;}
+  .cat-count{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+
   /* ===== Modal ===== */
   .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(10,20,30,0.5);z-index:60;
@@ -158,7 +164,8 @@
         <div><h2>صيدلية الحازم</h2><p>لوحة التحكم</p></div>
       </div>
       <nav class="side-nav">
-        <button class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> المنتجات</button>
+        <button class="nav-btn active" data-panel="products"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> المنتجات</button>
+        <button class="nav-btn" data-panel="categories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg> الأقسام</button>
       </nav>
       <div class="side-footer">
         <div class="user-email" id="userEmail"></div>
@@ -168,27 +175,51 @@
     </aside>
 
     <main class="main">
-      <h1 class="page-title">المنتجات</h1>
-      <p class="page-sub">إدارة كاملة لمنتجات الكتالوج — أي تعديل بيظهر فورًا على الموقع.</p>
+      <div id="productsPanel">
+        <h1 class="page-title">المنتجات</h1>
+        <p class="page-sub">إدارة كاملة لمنتجات الكتالوج — أي تعديل بيظهر فورًا على الموقع.</p>
 
-      <div class="stats-row">
-        <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">إجمالي المنتجات</div></div>
-        <div class="stat-card"><div class="num" id="statOffers">0</div><div class="label">عروض نشطة</div></div>
-        <div class="stat-card"><div class="num" id="statCats">4</div><div class="label">تصنيفات</div></div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">إجمالي المنتجات</div></div>
+          <div class="stat-card"><div class="num" id="statOffers">0</div><div class="label">عروض نشطة</div></div>
+          <div class="stat-card"><div class="num" id="statCats">0</div><div class="label">تصنيفات</div></div>
+        </div>
+
+        <div class="toolbar">
+          <span></span>
+          <button class="btn-add" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> إضافة منتج</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>المنتج</th><th>التصنيف</th><th>السعر</th><th></th></tr></thead>
+            <tbody id="productsBody">
+              <tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="toolbar">
-        <span></span>
-        <button class="btn-add" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> إضافة منتج</button>
-      </div>
+      <div id="categoriesPanel" style="display:none;">
+        <h1 class="page-title">الأقسام</h1>
+        <p class="page-sub">ضيفوا أو احذفوا تصنيفات المنتجات — بتظهر فورًا في الموقع وفي فورم إضافة المنتج.</p>
 
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>المنتج</th><th>التصنيف</th><th>السعر</th><th></th></tr></thead>
-          <tbody id="productsBody">
-            <tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr>
-          </tbody>
-        </table>
+        <div class="toolbar">
+          <div class="add-cat-row">
+            <input id="newCatInput" type="text" placeholder="اسم القسم الجديد… مثلا: فيتامينات">
+            <button class="btn-add" id="addCatBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> إضافة قسم</button>
+          </div>
+        </div>
+        <div class="form-msg" id="catMsg"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>اسم القسم</th><th>عدد المنتجات</th><th></th></tr></thead>
+            <tbody id="categoriesBody">
+              <tr class="empty-row"><td colspan="3">جاري التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>
@@ -242,26 +273,118 @@ loginBtn.addEventListener("click", ()=>{
 
 document.getElementById("logoutBtn").addEventListener("click", ()=> auth.signOut());
 
+// ===== التنقل بين "المنتجات" و "الأقسام" =====
+const productsPanel = document.getElementById("productsPanel");
+const categoriesPanel = document.getElementById("categoriesPanel");
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".nav-btn").forEach(b=> b.classList.remove("active"));
+    btn.classList.add("active");
+    const panel = btn.dataset.panel;
+    productsPanel.style.display = panel==="products" ? "block" : "none";
+    categoriesPanel.style.display = panel==="categories" ? "block" : "none";
+  });
+});
+
 auth.onAuthStateChanged(user=>{
   if(user){
     loginScreen.style.display = "none";
     appScreen.style.display = "block";
     userEmailEl.textContent = user.email;
     startProductsListener();
+    startCategoriesListener();
   } else {
     loginScreen.style.display = "flex";
     appScreen.style.display = "none";
   }
 });
 
-// ===== Category select options =====
+// ===== الأقسام (من قاعدة البيانات، بدل قائمة ثابتة) =====
 const fCategory = document.getElementById("fCategory");
-CATEGORIES.forEach(c=>{
-  const opt = document.createElement("option");
-  opt.value = c; opt.textContent = c;
-  fCategory.appendChild(opt);
+const categoriesBody = document.getElementById("categoriesBody");
+const newCatInput = document.getElementById("newCatInput");
+const catMsg = document.getElementById("catMsg");
+let categories = [];
+let categoriesListenerStarted = false;
+
+function startCategoriesListener(){
+  if(categoriesListenerStarted) return;
+  categoriesListenerStarted = true;
+  db.ref("categories").on("value", snapshot=>{
+    const val = snapshot.val();
+    if(val === null){
+      // أول مرة تفتح فيها اللوحة، نزرع الأقسام الافتراضية
+      const seed = ["العناية بالبشرة", "مكياج", "العناية بالشعر", "عطور"];
+      db.ref("categories").set(seed);
+      return; // الـ listener هيتنده تاني لما يتحفظوا
+    }
+    categories = Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean);
+    renderCategorySelect();
+    renderCategoriesTable();
+    document.getElementById("statCats").textContent = categories.length;
+  });
+}
+
+function renderCategorySelect(){
+  const current = fCategory.value;
+  fCategory.innerHTML = "";
+  categories.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    fCategory.appendChild(opt);
+  });
+  if(categories.includes(current)) fCategory.value = current;
+}
+
+function renderCategoriesTable(){
+  if(categories.length === 0){
+    categoriesBody.innerHTML = '<tr class="empty-row"><td colspan="3">مفيش أقسام لسه</td></tr>';
+    return;
+  }
+  categoriesBody.innerHTML = "";
+  categories.forEach(cat=>{
+    const count = products.filter(p=>p.category===cat).length;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="cat-name">${cat}</td>
+      <td class="cat-count">${count} منتج</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn delete" data-cat="${cat.replace(/"/g,'&quot;')}" title="حذف">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          </button>
+        </div>
+      </td>
+    `;
+    categoriesBody.appendChild(tr);
+  });
+  categoriesBody.querySelectorAll(".icon-btn.delete").forEach(btn=>{
+    btn.addEventListener("click", ()=> deleteCategory(btn.dataset.cat));
+  });
+}
+
+function deleteCategory(cat){
+  const inUse = products.filter(p=>p.category===cat).length;
+  if(inUse > 0){
+    alert(`مينفعش تحذف "${cat}" — فيه ${inUse} منتج مستخدمينه دلوقتي. غيّروا تصنيف المنتجات دي الأول.`);
+    return;
+  }
+  if(!confirm(`متأكد إنك عايز تحذف قسم "${cat}"؟`)) return;
+  const updated = categories.filter(c=>c!==cat);
+  db.ref("categories").set(updated);
+}
+
+document.getElementById("addCatBtn").addEventListener("click", ()=>{
+  const name = newCatInput.value.trim();
+  catMsg.textContent = "";
+  if(!name){ catMsg.textContent = "اكتب اسم القسم"; return; }
+  if(categories.includes(name)){ catMsg.textContent = "القسم ده موجود بالفعل"; return; }
+  const updated = [...categories, name];
+  db.ref("categories").set(updated).then(()=>{
+    newCatInput.value = "";
+  });
 });
-document.getElementById("statCats").textContent = CATEGORIES.length;
+newCatInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") document.getElementById("addCatBtn").click(); });
 
 // ===== Products realtime listener =====
 let products = [];
@@ -280,6 +403,7 @@ function renderTable(){
   const body = document.getElementById("productsBody");
   document.getElementById("statTotal").textContent = products.length;
   document.getElementById("statOffers").textContent = products.filter(p=>p.oldPrice).length;
+  if(categoriesListenerStarted) renderCategoriesTable();
 
   if(products.length === 0){
     body.innerHTML = '<tr class="empty-row"><td colspan="4">مفيش منتجات لسه — دوس "إضافة منتج" عشان تبدأ</td></tr>';
@@ -345,7 +469,7 @@ function openModal(id){
     editId.value = id;
     fName.value = p.name||"";
     fDesc.value = p.desc||"";
-    fCategory.value = p.category||CATEGORIES[0];
+    fCategory.value = p.category||categories[0]||"";
     fPrice.value = p.price||"";
     fOldPrice.value = p.oldPrice||"";
     currentImageUrl = p.imageUrl||"";
@@ -354,7 +478,7 @@ function openModal(id){
     modalTitle.textContent = "إضافة منتج جديد";
     editId.value = "";
     fName.value = ""; fDesc.value = ""; fPrice.value = ""; fOldPrice.value = "";
-    fCategory.value = CATEGORIES[0];
+    fCategory.value = categories[0]||"";
     currentImageUrl = "";
     imgPreview.innerHTML = "هتظهر الصورة هنا";
   }

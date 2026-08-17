@@ -56,9 +56,8 @@
   .trust-pill{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.22);border-radius:10px;padding:11px 16px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:500;backdrop-filter:blur(2px);}
   .trust-pill svg{width:17px;height:17px;flex-shrink:0;color:var(--gold);}
 
-  .chips-wrap{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:69px;z-index:25;}
-  .chips{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:13px 24px;scrollbar-width:none;}
-  .chips::-webkit-scrollbar{display:none;}
+  .chips-wrap{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:92px;z-index:25;}
+  .chips{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px;padding:13px 24px;}
   .chip{flex-shrink:0;padding:8px 17px;border-radius:999px;border:1px solid var(--blue-line);background:#fff;color:var(--blue-deep);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:background .15s, color .15s, border-color .15s;white-space:nowrap;}
   .chip:hover{border-color:var(--blue);}
   .chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
@@ -263,7 +262,8 @@ let products = [];
 let activeCategory = "الكل";
 let searchTerm = "";
 
-const chipCategories = ["الكل", ...CATEGORIES, "عروض خاصة"];
+let categories = [];
+let chipCategories = ["الكل", "عروض خاصة"];
 const chipRow = document.getElementById("chipRow");
 const grid = document.getElementById("grid");
 const searchInput = document.getElementById("searchInput");
@@ -501,6 +501,20 @@ function route(){
   }
 }
 
+let pendingUrlCategory = null;
+
+db.ref("categories").on("value", (snapshot)=>{
+  const val = snapshot.val();
+  categories = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+  chipCategories = ["الكل", ...categories, "عروض خاصة"];
+  if(pendingUrlCategory && chipCategories.includes(pendingUrlCategory)){
+    activeCategory = pendingUrlCategory;
+    pendingUrlCategory = null;
+    renderGrid();
+  }
+  renderChips();
+});
+
 db.ref("products").on("value", (snapshot) => {
   products = [];
   snapshot.forEach(child => {
@@ -515,7 +529,7 @@ searchInput.addEventListener("input", (e)=>{ searchTerm = e.target.value.trim();
 (function applyUrlParams(){
   const params = new URLSearchParams(location.search);
   const cat = params.get("cat");
-  if(cat && chipCategories.includes(cat)) activeCategory = cat;
+  if(cat) pendingUrlCategory = cat;
 })();
 
 document.getElementById("fabOrder").addEventListener("click", ()=>{
